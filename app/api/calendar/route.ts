@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { SemesterPlan } from "@/app/types/SemesterPlan";
 import { createEvents } from "ics";
 import { parseISO } from "date-fns";
-import { stateStore } from "./save-state/route";
+import { stateStore } from "../save-state/route";
 
 interface EventState {
   [courseId: string]: Record<string, boolean>;
@@ -119,21 +119,31 @@ export async function POST(req: NextRequest) {
   }
 }
 
-
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const key = url.searchParams.get("key");
-    if (!key) return new NextResponse("Missing key", { status: 400 });
+    if (!key)
+      return new NextResponse("Missing key", {
+        status: 400,
+        headers: { "Content-Type": "text/plain" },
+      });
 
-    const data = stateStore.get(key);
-    if (!data) return new NextResponse("Invalid or expired key", { status: 404 });
+    const saved = stateStore.get(key);
+    if (!saved)
+      return new NextResponse("Invalid or expired key", {
+        status: 404,
+        headers: { "Content-Type": "text/plain" },
+      });
 
-    const { courses, semester, state, alias } = data;
+    const { courses, semester, state, alias } = saved;
 
     return await handleRequest(courses, semester, state, alias);
   } catch (err) {
     console.error(err);
-    return new NextResponse("Server error", { status: 500 });
+    return new NextResponse("Server error", {
+      status: 500,
+      headers: { "Content-Type": "text/plain" },
+    });
   }
 }

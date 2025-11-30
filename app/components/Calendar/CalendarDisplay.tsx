@@ -72,26 +72,23 @@ export async function handleExport({
   }
 
   if (mode === "google") {
-    await addToGoogleCalendar(courses, semester, state, alias);
+    // 1. Save state server-side
+    const stateRes = await fetch("/api/save-state", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ courses, semester, state, alias }),
+    });
+
+    const { key } = await stateRes.json();
+    if (!key) return alert("Failed to generate calendar");
+
+    // 2. Open Google Calendar with short key
+    const icsUrl = `${window.location.origin}/api/calendar?key=${key}`;
+    const googleUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(icsUrl)}`;
+
+    window.open(googleUrl, "_blank");
     return;
   }
-}
-
-async function addToGoogleCalendar(courses: string[], semester: string, state: Record<string, Record<string, boolean>>, alias: Record<string, string>) {
-  // 1. Save state server-side
-  const res = await fetch("/api/save-state", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ courses, semester, state, alias }),
-  });
-  const { key } = await res.json();
-  if (!key) return alert("Failed to generate calendar");
-
-  // 2. Open Google Calendar with short URL
-  const icsUrl = `${window.location.origin}/api/calendar?key=${key}`;
-  const googleUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(icsUrl)}`;
-
-  window.open(googleUrl, "_blank");
 }
 
 function stringToPastelColor(
@@ -304,14 +301,14 @@ const CalendarDisplay = ({ semesterPlans }: CalendarDisplayProps) => {
               ? `Week ${weekNumber}`
               : view === "day"
                 ? selectedDate.toLocaleDateString("en-US", {
-                  weekday: "long",
-                  month: "long",
-                  day: "numeric",
-                })
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                  })
                 : selectedDate.toLocaleDateString("en-US", {
-                  month: "long",
-                  year: "numeric",
-                })}
+                    month: "long",
+                    year: "numeric",
+                  })}
           </h3>
         </span>
         <span className="flex flex-row gap-2">
