@@ -1,19 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SemesterPlan } from "@/app/types/SemesterPlan";
 import { createEvents } from "ics";
-       import { parseISO } from "date-fns";
+import { parseISO } from "date-fns";
 
 interface EventState {
   [courseId: string]: Record<string, boolean>;
 }
 
-async function fetchSemesterPlans(courses: string[], semester: string): Promise<SemesterPlan[]> {
+async function fetchSemesterPlans(
+  courses: string[],
+  semester: string
+): Promise<SemesterPlan[]> {
   const apiKey = "277312d4-95ba-4b24-b486-b3ca70e80da3";
   const semesterPlans: SemesterPlan[] = [];
 
   for (const courseCode of courses) {
     const apiUrl = `https://gw-ntnu.intark.uh-it.no/tp/prod/ws/1.4/course.php?id=${courseCode}&sem=${semester}&lang=no&split_intervals=true&exam=true`;
-    const res = await fetch(apiUrl, { headers: { "X-Gravitee-Api-Key": apiKey } });
+    const res = await fetch(apiUrl, {
+      headers: { "X-Gravitee-Api-Key": apiKey },
+    });
     if (!res.ok) continue;
     const plan: SemesterPlan = await res.json();
     semesterPlans.push(plan);
@@ -22,7 +27,7 @@ async function fetchSemesterPlans(courses: string[], semester: string): Promise<
   return semesterPlans;
 }
 
-function generateICSEvents(semesterPlans: SemesterPlan[], state: EventState) {
+function generateICSEvents(semesterPlans: SemesterPlan[], state: EventState, alias: { [courseId: string]: string } = {}) {
   const weekdays = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag"];
 
   return semesterPlans.flatMap((plan) => {
@@ -36,13 +41,11 @@ function generateICSEvents(semesterPlans: SemesterPlan[], state: EventState) {
         return courseState[key] ?? true;
       })
       .map((ev) => {
+        const startDate = parseISO(ev.dtstart.replace(" ", "T"));
+        const endDate = parseISO(ev.dtend.replace(" ", "T"));
 
-const startDate = parseISO(ev.dtstart.replace(" ", "T"));
-const endDate = parseISO(ev.dtend.replace(" ", "T"));
-
-        console.log(startDate, endDate);
         return {
-          title: `${plan.coursename} - ${ev.summary}`,
+          title: `${alias[plan.courseid] ?? plan.coursename} - ${ev.summary}`,
           start: [
             startDate.getFullYear(),
             startDate.getMonth() + 1,
@@ -64,9 +67,14 @@ const endDate = parseISO(ev.dtend.replace(" ", "T"));
   });
 }
 
-async function handleRequest(courses: string[], semester: string, state: EventState) {
+async function handleRequest(
+  courses: string[],
+  semester: string,
+  state: EventState,
+  alias: { [courseId: string]: string } = {}
+) {
   const semesterPlans = await fetchSemesterPlans(courses, semester);
-  const icsEvents = generateICSEvents(semesterPlans, state);
+  const icsEvents = generateICSEvents(semesterPlans, state, alias);
   const { error, value } = createEvents(icsEvents);
 
   if (error) throw error instanceof Error ? error : new Error(String(error));
@@ -84,43 +92,60 @@ async function handleRequest(courses: string[], semester: string, state: EventSt
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { courses, semester, state } = body as { courses: string[]; semester: string; state: EventState };
+    const { courses, semester, state, alias } = body as {
+      courses: string[];
+      semester: string;
+      state: EventState;
+      alias: { [courseId: string]: string };
+    };
 
-    if (!courses || !semester) return NextResponse.json({ error: "Missing courses or semester" }, { status: 400 });
+    if (!courses || !semester)
+      return NextResponse.json(
+        { error: "Missing courses or semester" },
+        { status: 400 }
+      );
 
-    return await handleRequest(courses, semester, state || {});
+    return await handleRequest(courses, semester, state || {}, alias || {});
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
 
-// Handle GET (browser-friendly)
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
-    const coursesParam = url.searchParams.get("courses") || "";
-    const semester = url.searchParams.get("semester") || "";
-    const hideParam = url.searchParams.get("hide") || ""; // e.g., comma-separated "course-aid-Tirsdag"
 
-    if (!coursesParam || !semester) {
-      return NextResponse.json({ error: "Missing courses or semester" }, { status: 400 });
+    const coursesRaw = url.searchParams.get("courses") || "";
+    const semester = url.searchParams.get("semester") || "";
+    const stateRaw = url.searchParams.get("state") || "";
+    const aliasRaw = url.searchParams.get("alias") || "";
+
+    if (!coursesRaw || !semester) {
+      return NextResponse.json(
+        { error: "Missing courses or semester" },
+        { status: 400 }
+      );
     }
 
-    const courses = coursesParam.split(",");
+    // courses=["AAR4360","AAR4235"] OR AAR4360,AAR4235
+    const courses = coursesRaw.startsWith("[")
+      ? JSON.parse(coursesRaw)
+      : coursesRaw.split(",");
 
-    // Convert hideParam into EventState format
-    const state: EventState = {};
-    hideParam.split(",").forEach((id) => {
-      if (!id) return;
-      // Expected format: courseid-aid-weekday, e.g., "AAR4235-5H-AAR4235-1-1-1-Tirsdag"
-      const [courseId, ...eventIdParts] = id.split("-");
-      const eventId = eventIdParts.join("-");
-      if (!state[courseId]) state[courseId] = {};
-      state[courseId][eventId] = false; // false = hidden
-    });
+    // state is URL encoded JSON
+    let state: EventState = {};
+    try {
+      if (stateRaw) {
+        state = JSON.parse(decodeURIComponent(stateRaw));
+      }
+    } catch (err) {
+      console.error("Failed to parse state:", err);
+    }
 
-    return await handleRequest(courses, semester, state);
+    const alias = JSON.parse(aliasRaw);
+
+    return await handleRequest(courses, semester, state, alias);
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
