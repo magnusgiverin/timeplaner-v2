@@ -72,11 +72,6 @@ export async function handleExport({
   }
 
   if (mode === "google") {
-    /**
-     * Google Calendar allows loading an ICS file when passed via a URL.
-     * We create a blob and give Google a blob URL.
-     * This opens Google's import view with the file preloaded.
-     */
     const blob = new Blob([icsText], { type: "text/calendar" });
     const url = URL.createObjectURL(blob);
 
@@ -357,7 +352,7 @@ const CalendarDisplay = ({ semesterPlans }: CalendarDisplayProps) => {
         />
       )}
       <section>
-        <div className="flex justify-end p-4">
+        <div className="flex justify-end p-4 flex flex-row gap-4">
           <button
             className="cursor-pointer flex flex-row gap-4 bg-burnt-peach hover:bg-terracotta-clay text-deep-dark font-semibold py-2 px-4 rounded-full transition"
             onClick={() =>
@@ -374,6 +369,23 @@ const CalendarDisplay = ({ semesterPlans }: CalendarDisplayProps) => {
           >
             <span className="material-icons">download</span>
             Export to ICS
+          </button>
+          <button
+            className="cursor-pointer flex flex-row gap-4 bg-burnt-peach hover:bg-terracotta-clay text-deep-dark font-semibold py-2 px-4 rounded-full transition"
+            onClick={() =>
+              handleExport({
+                mode: "google",
+                courses: coursesParam
+                  ? JSON.parse(decodeURIComponent(coursesParam))
+                  : [],
+                semester: semesterParam,
+                alias: JSON.parse(decodeURIComponent(aliasParam)),
+                state: JSON.parse(decodeURIComponent(stateParam)),
+              })
+            }
+          >
+            <span className="material-icons">upload</span>
+            Subscribe to Google Calendar
           </button>
         </div>
       </section>
