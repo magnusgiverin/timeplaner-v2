@@ -128,10 +128,10 @@ export async function GET(req: NextRequest) {
     const aliasRaw = url.searchParams.get("alias") || "";
 
     if (!coursesRaw || !semester) {
-      return NextResponse.json(
-        { error: "Missing courses or semester" },
-        { status: 400 },
-      );
+      return new NextResponse("Missing courses or semester", {
+        status: 400,
+        headers: { "Content-Type": "text/plain" },
+      });
     }
 
     // courses=["AAR4360","AAR4235"] OR AAR4360,AAR4235
@@ -149,11 +149,15 @@ export async function GET(req: NextRequest) {
       console.error("Failed to parse state:", err);
     }
 
-    const alias = JSON.parse(aliasRaw);
+    const alias = aliasRaw ? JSON.parse(aliasRaw) : {};
 
+    // NOW return ICS
     return await handleRequest(courses, semester, state, alias);
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return new NextResponse("Server error", {
+      status: 500,
+      headers: { "Content-Type": "text/plain" },
+    });
   }
 }
