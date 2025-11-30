@@ -134,12 +134,10 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // courses=["AAR4360","AAR4235"] OR AAR4360,AAR4235
-    const courses = coursesRaw.startsWith("[")
-      ? JSON.parse(coursesRaw)
-      : coursesRaw.split(",");
+    // courses="AAR4360,AAR4235"
+    const courses = coursesRaw.split(",").map((c) => c.trim());
 
-    // state is URL encoded JSON
+    // state is optional, decode if present
     let state: EventState = {};
     try {
       if (stateRaw) {
@@ -149,9 +147,16 @@ export async function GET(req: NextRequest) {
       console.error("Failed to parse state:", err);
     }
 
-    const alias = aliasRaw ? JSON.parse(aliasRaw) : {};
+    // alias="AAR1025:Math,AAR4208:Physics"
+    const alias: { [courseId: string]: string } = {};
+    if (aliasRaw) {
+      aliasRaw.split(",").forEach((pair) => {
+        const [key, value] = pair.split(":");
+        if (key && value) alias[key] = value;
+      });
+    }
 
-    // NOW return ICS
+    // Generate ICS and return
     return await handleRequest(courses, semester, state, alias);
   } catch (err) {
     console.error(err);
