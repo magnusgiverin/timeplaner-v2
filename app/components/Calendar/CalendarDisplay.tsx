@@ -72,18 +72,19 @@ export async function handleExport({
   }
 
   if (mode === "google") {
-    const params = new URLSearchParams({
-      courses: JSON.stringify(courses),
-      semester,
-      state: JSON.stringify(state),
-      alias: JSON.stringify(alias),
-    });
+   const params = new URLSearchParams({
+  courses: JSON.stringify(courses),
+  semester,
+  state: encodeURIComponent(JSON.stringify(state)),
+  alias: JSON.stringify(alias),
+});
 
-    const googleUrl = `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(
-      `${window.location.origin}/api/calendar?${params.toString()}`
-    )}`;
-    
-    window.open(googleUrl, "_blank");
+const icsUrl = `${window.location.origin}/api/calendar?${params.toString()}`;
+
+const googleUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(icsUrl)}`;
+
+window.open(googleUrl, "_blank");
+
     return;
   }
 }
