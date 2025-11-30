@@ -9,7 +9,7 @@ interface EventState {
 
 async function fetchSemesterPlans(
   courses: string[],
-  semester: string
+  semester: string,
 ): Promise<SemesterPlan[]> {
   const apiKey = "277312d4-95ba-4b24-b486-b3ca70e80da3";
   const semesterPlans: SemesterPlan[] = [];
@@ -27,7 +27,11 @@ async function fetchSemesterPlans(
   return semesterPlans;
 }
 
-function generateICSEvents(semesterPlans: SemesterPlan[], state: EventState, alias: { [courseId: string]: string } = {}) {
+function generateICSEvents(
+  semesterPlans: SemesterPlan[],
+  state: EventState,
+  alias: { [courseId: string]: string } = {},
+) {
   const weekdays = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag"];
 
   return semesterPlans.flatMap((plan) => {
@@ -43,6 +47,8 @@ function generateICSEvents(semesterPlans: SemesterPlan[], state: EventState, ali
       .map((ev) => {
         const startDate = parseISO(ev.dtstart.replace(" ", "T"));
         const endDate = parseISO(ev.dtend.replace(" ", "T"));
+
+        const groups = (ev.studentgroups ?? []).join(", ");
 
         return {
           title: `${alias[plan.courseid] ?? plan.coursename} - ${ev.summary}`,
@@ -61,7 +67,7 @@ function generateICSEvents(semesterPlans: SemesterPlan[], state: EventState, ali
             endDate.getMinutes(),
           ] as [number, number, number, number, number],
           location: ev.room?.map((r) => r.roomname).join(", ") ?? "",
-          description: `Student groups: ${(ev.studentgroups ?? []).join(", ")}`,
+          description: groups ? `Student groups: ${groups}` : "",
         };
       });
   });
@@ -71,7 +77,7 @@ async function handleRequest(
   courses: string[],
   semester: string,
   state: EventState,
-  alias: { [courseId: string]: string } = {}
+  alias: { [courseId: string]: string } = {},
 ) {
   const semesterPlans = await fetchSemesterPlans(courses, semester);
   const icsEvents = generateICSEvents(semesterPlans, state, alias);
@@ -102,7 +108,7 @@ export async function POST(req: NextRequest) {
     if (!courses || !semester)
       return NextResponse.json(
         { error: "Missing courses or semester" },
-        { status: 400 }
+        { status: 400 },
       );
 
     return await handleRequest(courses, semester, state || {}, alias || {});
@@ -124,7 +130,7 @@ export async function GET(req: NextRequest) {
     if (!coursesRaw || !semester) {
       return NextResponse.json(
         { error: "Missing courses or semester" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 

@@ -3,6 +3,7 @@ import WeekView from "./Views/WeekView";
 import MonthView from "./Views/MonthView";
 import DayView from "./Views/DayView";
 import { Event, SemesterPlan } from "@/app/types/SemesterPlan";
+import { useSearchParams } from "next/navigation";
 
 const IconButton = ({
   icon,
@@ -16,17 +17,85 @@ const IconButton = ({
   selected?: boolean;
 }) => {
   return (
-    <button className={`cursor-pointer  rounded-full items-center flex justify-center p-2 transition  w-10 md:w-12 h-10 md:h-12 ${!selected ? " bg-burnt-peach hover:bg-terracotta-clay" : "hover:bg-burnt-peach bg-rosy-taupe"}`} onClick={onClick} aria-label={ariaLabel}>
+    <button
+      className={`cursor-pointer  rounded-full items-center flex justify-center p-2 transition  w-10 md:w-12 h-10 md:h-12 ${!selected ? " bg-burnt-peach hover:bg-terracotta-clay" : "hover:bg-burnt-peach bg-rosy-taupe"}`}
+      onClick={onClick}
+      aria-label={ariaLabel}
+    >
       <span className="material-icons">{icon}</span>
     </button>
-  )
+  );
 };
+
+export async function handleExport({
+  mode,
+  courses,
+  semester,
+  state = {},
+  alias = {},
+}: {
+  mode: "download" | "google";
+  courses: string[];
+  semester: string;
+  state?: Record<string, Record<string, boolean>>;
+  alias?: Record<string, string>;
+}) {
+  const res = await fetch("/api/calendar", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      courses,
+      semester,
+      state,
+      alias,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to generate ICS file");
+  }
+
+  const icsText = await res.text();
+
+  if (mode === "download") {
+    // Create a download
+    const blob = new Blob([icsText], { type: "text/calendar" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "calendar.ics";
+    a.click();
+
+    URL.revokeObjectURL(url);
+    return;
+  }
+
+  if (mode === "google") {
+    /**
+     * Google Calendar allows loading an ICS file when passed via a URL.
+     * We create a blob and give Google a blob URL.
+     * This opens Google's import view with the file preloaded.
+     */
+    const blob = new Blob([icsText], { type: "text/calendar" });
+    const url = URL.createObjectURL(blob);
+
+    // Google Calendar import endpoint
+    const googleUrl = `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(
+      url,
+    )}`;
+
+    window.open(googleUrl, "_blank");
+
+    return;
+  }
+}
 
 function stringToPastelColor(
   str: string,
   lightness = 85,
   saturation = 40,
-  warmShift = 20
+  warmShift = 20,
 ) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -68,13 +137,17 @@ interface CalendarDisplayProps {
   semesterPlans: SemesterPlan[];
 }
 
-const CalendarDisplay = ({
-  semesterPlans,
-}: CalendarDisplayProps) => {
+const CalendarDisplay = ({ semesterPlans }: CalendarDisplayProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [expanded, setExpanded] = useState(false);
   const [view, setView] = useState<"day" | "week" | "month">("week");
   const previousViewRef = useRef<"day" | "week" | "month" | null>(null);
+
+  const params = useSearchParams();
+
+  const semesterParam = params.get("semester") || "current";
+  const coursesParam = params.get("courses") || "";
+  const aliasParam = params.get("alias") || "";
+  const stateParam = params.get("state") || "{}";
 
   const weekDates = getWeekDates(selectedDate);
 
@@ -114,7 +187,7 @@ const CalendarDisplay = ({
 
     if (view === "day") {
       // Move one day back
-      prev.setDate(prev.getDate() - 1)
+      prev.setDate(prev.getDate() - 1);
     } else if (view === "week") {
       // Move one week back
       prev.setDate(prev.getDate() - 7);
@@ -144,9 +217,9 @@ const CalendarDisplay = ({
   const handleViewChange = (newView: "day" | "week" | "month") => {
     previousViewRef.current = view;
     setView(newView);
-  }
+  };
 
-  const hours = Array.from({ length: expanded ? 25 : 11 }, (_, i) => i);
+  const hours = Array.from({ length: 12 }, (_, i) => i);
 
   function getISOWeekNumber(d: Date) {
     const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -154,14 +227,16 @@ const CalendarDisplay = ({
     // Set to nearest Thursday: current date + 4 - current day number
     date.setUTCDate(date.getUTCDate() + 4 - dayNum);
     const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-    const weekNo = Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+    const weekNo = Math.ceil(
+      ((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
+    );
     return weekNo;
   }
 
   const weekStart = weekDates[0] ?? selectedDate;
   const weekNumber = getISOWeekNumber(weekStart);
 
-  const eventItems = semesterPlans.map(sp => sp.events).flat();
+  const eventItems = semesterPlans.map((sp) => sp.events).flat();
 
   return (
     <main className="w-full">
@@ -182,13 +257,6 @@ const CalendarDisplay = ({
             onClick={() => setSelectedDate(new Date())}
             ariaLabel="Go to today"
           />
-          {view !== "month" && (
-            <IconButton
-              icon={expanded ? "unfold_less" : "unfold_more"}
-              onClick={() => setExpanded((prev) => !prev)}
-              aria-label={expanded ? "Collapse calendar hours" : "Expand calendar hours"}
-            />
-          )}
           <IconButton
             icon="view_day"
             selected={view === "day"}
@@ -233,25 +301,17 @@ const CalendarDisplay = ({
               ? `Week ${weekNumber}`
               : view === "day"
                 ? selectedDate.toLocaleDateString("en-US", {
-                  weekday: "long",
-                  month: "long",
-                  day: "numeric",
-                })
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                  })
                 : selectedDate.toLocaleDateString("en-US", {
-                  month: "long",
-                  year: "numeric",
-                })}
+                    month: "long",
+                    year: "numeric",
+                  })}
           </h3>
         </span>
         <span className="flex flex-row gap-2">
-          {view !== "month" && (
-            <IconButton
-              icon={expanded ? "unfold_less" : "unfold_more"}
-              selected={expanded}
-              onClick={() => setExpanded((prev) => !prev)}
-              aria-label={expanded ? "Collapse calendar hours" : "Expand calendar hours"}
-            />
-          )}
           <IconButton
             icon="view_day"
             onClick={() => handleViewChange("day")}
@@ -277,7 +337,6 @@ const CalendarDisplay = ({
           weekDates={weekDates}
           eventItems={eventItems}
           hours={hours}
-          expanded={expanded}
           setSelectedDate={setSelectedDate}
           setView={setView}
         />
@@ -288,7 +347,6 @@ const CalendarDisplay = ({
           setSelectedDate={setSelectedDate}
           hours={hours}
           setView={setView}
-          expanded={expanded}
         />
       ) : (
         <MonthView
@@ -298,6 +356,27 @@ const CalendarDisplay = ({
           setView={setView}
         />
       )}
+      <section>
+        <div className="flex justify-end p-4">
+          <button
+            className="cursor-pointer flex flex-row gap-4 bg-burnt-peach hover:bg-terracotta-clay text-deep-dark font-semibold py-2 px-4 rounded-full transition"
+            onClick={() =>
+              handleExport({
+                mode: "download",
+                courses: coursesParam
+                  ? JSON.parse(decodeURIComponent(coursesParam))
+                  : [],
+                semester: semesterParam,
+                alias: JSON.parse(decodeURIComponent(aliasParam)),
+                state: JSON.parse(decodeURIComponent(stateParam)),
+              })
+            }
+          >
+            <span className="material-icons">download</span>
+            Export to ICS
+          </button>
+        </div>
+      </section>
     </main>
   );
 };

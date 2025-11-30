@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { useRouter } from "next/navigation";
 import StepDescription from "./components/StepDescription";
 
@@ -7,7 +7,7 @@ const Home = () => {
 
   const handleGetStarted = () => {
     router.push("/courses");
-  }
+  };
 
   return (
     <main className="items-center flex justify-center">
@@ -15,9 +15,13 @@ const Home = () => {
         <div className="p-4 w-full">
           <h2 className="font-semibold">Hva skjer nå?</h2>
           <p className="mt-2">
-            Følg trinnene for å sette opp timeplanen. Du kan hoppe over valg av studieretning om ønskelig.
+            Følg trinnene for å sette opp timeplanen. Du kan hoppe over valg av
+            studieretning om ønskelig.
           </p>
-          <button onClick={handleGetStarted} className="cursor-pointer mt-8 inline-block px-8 py-2 font-fruncy-sage text-3xl font-bold bg-burnt-peach text-bright-white rounded-full hover:bg-dark-coral transition hover:bg-terracotta-clay">
+          <button
+            onClick={handleGetStarted}
+            className="cursor-pointer mt-8 inline-block px-8 py-2 font-fruncy-sage text-3xl font-bold bg-burnt-peach text-bright-white rounded-full hover:bg-dark-coral transition hover:bg-terracotta-clay"
+          >
             {"Kom i gang"}
           </button>
         </div>
@@ -40,13 +44,11 @@ const Home = () => {
               title="Se kalender"
               description="Se og rediger kalenderen basert på valgte fag."
             />
-
           </ol>
         </div>
       </div>
     </main>
-
   );
-}
+};
 
 export default Home;

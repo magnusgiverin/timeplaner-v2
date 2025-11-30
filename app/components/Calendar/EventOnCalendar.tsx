@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getColorForEvent } from "./CalendarDisplay";
 import { Event } from "@/app/types/SemesterPlan";
 import EventModal from "./EventModal";
+import { useSearchParams } from "next/navigation";
 
 type EventOnCalendarProps = {
   eventData: {
@@ -9,7 +10,6 @@ type EventOnCalendarProps = {
     width: number;
     left: number;
   };
-  expanded: boolean;
 };
 
 const HOUR_HEIGHT = 32;
@@ -21,9 +21,10 @@ function parseEventHour(dt: string) {
   return parseInt(hoursStr, 10) + parseInt(minutesStr, 10) / 60;
 }
 
-
-export const EventOnCalendar = ({ eventData, expanded }: EventOnCalendarProps) => {
+export const EventOnCalendar = ({ eventData }: EventOnCalendarProps) => {
   const [modalOpen, setModalOpen] = useState(false);
+  const params = useSearchParams();
+  const aliasParam = params.get("alias") || "";
 
   useEffect(() => {
     if (modalOpen) {
@@ -39,13 +40,13 @@ export const EventOnCalendar = ({ eventData, expanded }: EventOnCalendarProps) =
   }, [modalOpen]);
 
   const event = eventData.event;
-  const DAY_START_HOUR = expanded ? 0 : 8;
+  const DAY_START_HOUR = 8;
 
   const startHour = parseEventHour(event.dtstart);
   const endHour = parseEventHour(event.dtend);
 
   // Skip events ending before visible window
-  if (!expanded && endHour <= DAY_START_HOUR) return null;
+  if (endHour <= DAY_START_HOUR) return null;
 
   const clippedStartHour = Math.max(startHour, DAY_START_HOUR);
   const top = (clippedStartHour - DAY_START_HOUR) * HOUR_HEIGHT;
@@ -69,26 +70,37 @@ export const EventOnCalendar = ({ eventData, expanded }: EventOnCalendarProps) =
           paddingTop: height < 24 ? "0px" : "2px",
           paddingBottom: height < 24 ? "0px" : "2px",
         }}
-        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = colorPalette.hover)}
-        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = colorPalette.primary)}
+        onMouseEnter={(e) =>
+          (e.currentTarget.style.backgroundColor = colorPalette.hover)
+        }
+        onMouseLeave={(e) =>
+          (e.currentTarget.style.backgroundColor = colorPalette.primary)
+        }
         onClick={() => setModalOpen(true)}
       >
         <span
           className="block truncate"
-          style={{ color: colorPalette.textColor, fontSize: height < 25 ? "0.3rem" : "0.9rem" }}
+          style={{
+            color: colorPalette.textColor,
+            fontSize: height < 25 ? "0.3rem" : "0.9rem",
+          }}
         >
-          {event.courseid}
+          {JSON.parse(decodeURIComponent(aliasParam))[event.courseid]} (
+          {event.courseid})
         </span>
         {height >= 40 && event.room && (
-          <span className="flex items-center gap-1 truncate" style={{ color: colorPalette.locationColor, fontSize: "0.7rem" }}>
-            <span className="material-icons" style={{ fontSize: "inherit" }}>location_on</span>
+          <span
+            className="flex items-center gap-1 truncate"
+            style={{ color: colorPalette.locationColor, fontSize: "0.7rem" }}
+          >
+            <span className="material-icons" style={{ fontSize: "inherit" }}>
+              location_on
+            </span>
             {event.room.map((r) => r.roomid).join(", ")}
           </span>
         )}
       </div>
-      {modalOpen && (
-        <EventModal event={event} setModalOpen={setModalOpen} />
-      )}
+      {modalOpen && <EventModal event={event} setModalOpen={setModalOpen} />}
     </>
   );
 };

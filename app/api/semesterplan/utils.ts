@@ -1,7 +1,10 @@
 // app/api/semesterplan/utils.ts
 import { SemesterPlan } from "@/app/types/SemesterPlan";
 
-export async function fetchSemesterPlans(subjectCodes: string[], semester: string): Promise<SemesterPlan[]> {
+export async function fetchSemesterPlans(
+  subjectCodes: string[],
+  semester: string,
+): Promise<SemesterPlan[]> {
   const apiKey = "277312d4-95ba-4b24-b486-b3ca70e80da3";
   const resultArray: SemesterPlan[] = [];
 

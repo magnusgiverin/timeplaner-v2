@@ -14,11 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className="w-full"
-      >
+      <body className="w-full">
         <div className="relative flex flex-col px-4 md:px-16 lg:px-32 xl:px-64 mx-auto min-h-screen gap-20 md:gap-60 z-10 overflow-x-clip py-20 md:py-60">
-        <Navbar />
+          <Navbar />
           {children}
         </div>
       </body>

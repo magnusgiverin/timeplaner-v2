@@ -7,7 +7,9 @@ interface CalendarPageProps {
   searchParams: Promise<{ courses?: string; semester?: string }>;
 }
 
-export default async function CalendarPage({ searchParams }: CalendarPageProps) {
+export default async function CalendarPage({
+  searchParams,
+}: CalendarPageProps) {
   const { courses, semester } = await searchParams;
 
   if (!courses || !semester) throw new Error("Missing courses or semester");

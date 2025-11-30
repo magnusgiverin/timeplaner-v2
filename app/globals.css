@@ -1,5 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap");
+@import url("https://fonts.googleapis.com/icon?family=Material+Icons");
 @import "tailwindcss";
 
 :root {
@@ -12,8 +12,8 @@
   --color-bright-white: #fcf0f0;
   --color-yellow-tulip: #ffebaf;
 
-  --font-noto-sans: 'Noto Sans', sans-serif;
-  --font-fruncy-sage: 'Fruncy Sage', serif;
+  --font-noto-sans: "Noto Sans", sans-serif;
+  --font-fruncy-sage: "Fruncy Sage", serif;
 }
 
 @theme inline {
@@ -25,7 +25,7 @@
   --color-deep-dark: var(--color-deep-dark);
   --color-yellow-tulip: var(--color-yellow-tulip);
   --color-bright-white: var(--color-bright-white);
-  
+
   --font-noto-sans: var(--font-noto-sans);
   --font-fruncy-sage: var(--font-fruncy-sage);
 }
@@ -36,7 +36,7 @@
 }
 
 .material-icons {
-  font-family: 'Material Icons';
+  font-family: "Material Icons";
 }
 
 @layer base {

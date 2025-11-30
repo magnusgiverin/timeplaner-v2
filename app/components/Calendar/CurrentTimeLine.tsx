@@ -1,10 +1,9 @@
 interface CurrentTimeLineProps {
   day: Date;
-  expanded: boolean;
 }
 
-const CurrentTimeLine = ({ day, expanded }: CurrentTimeLineProps) => {
-  const startHour = expanded ? 0 : 8; 
+const CurrentTimeLine = ({ day }: CurrentTimeLineProps) => {
+  const startHour = 8;
 
   let nowLine: number | null = null;
   if (day.toDateString() === new Date().toDateString()) {
