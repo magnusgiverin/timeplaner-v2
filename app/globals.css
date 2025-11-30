@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import "tailwindcss";
+
+:root {
+  --color-seashell: #eee2dfff;
+  --color-powder-petal: #eed7c5ff;
+  --color-rosy-taupe: #c89f9cff;
+  --color-burnt-peach: #c97c5dff;
+  --color-terracotta-clay: #b36a5eff;
+  --color-deep-dark: rgb(85, 47, 43);
+  --color-bright-white: #fcf0f0;
+  --color-yellow-tulip: #ffebaf;
+
+  --font-noto-sans: 'Noto Sans', sans-serif;
+  --font-fruncy-sage: 'Fruncy Sage', serif;
+}
+
+@theme inline {
+  --color-seashell: var(--color-seashell);
+  --color-powder-petal: var(--color-powder-petal);
+  --color-rosy-taupe: var(--color-rosy-taupe);
+  --color-burnt-peach: var(--color-burnt-peach);
+  --color-terracotta-clay: var(--color-terracotta-clay);
+  --color-deep-dark: var(--color-deep-dark);
+  --color-yellow-tulip: var(--color-yellow-tulip);
+  --color-bright-white: var(--color-bright-white);
+  
+  --font-noto-sans: var(--font-noto-sans);
+  --font-fruncy-sage: var(--font-fruncy-sage);
+}
+
+@font-face {
+  font-family: "Fruncy Sage";
+  src: url("/fonts/frunchy-sage.ttf") format("truetype");
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+}
+
+@layer base {
+  html {
+    background-color: var(--color-seashell);
+    color: var(--color-deep-dark);
+    font-family: var(--font-noto-sans);
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-stretch: expanded;
+    font-weight: 600;
+    letter-spacing: 0em;
+    font-family: var(--font-fruncy-sage);
+    color: var(--color-terracotta-clay);
+  }
+
+  /* --- Base (Mobile) --- */
+  h1 {
+    font-size: 2.1rem;
+    /* was 1.7 */
+  }
+
+  h2 {
+    font-size: 1.7rem;
+    /* was 1.4 */
+  }
+
+  h3 {
+    font-size: 1.3rem;
+    /* was 1.1 */
+  }
+
+  p,
+  span {
+    font-size: 1rem;
+    /* was 0.8 */
+    line-height: 1.55;
+  }
+
+  small {
+    font-size: 0.85rem;
+    /* was 0.7 */
+  }
+
+  /* --- Small Screens (≥640px) --- */
+  @media (min-width: 640px) {
+    h1 {
+      font-size: 2.3rem;
+      /* was 1.8 */
+    }
+
+    h2 {
+      font-size: 1.9rem;
+      /* was 1.5 */
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      /* was 1.25 */
+    }
+
+    p,
+    span {
+      font-size: 1.1rem;
+      /* was 0.9 */
+    }
+
+    small {
+      font-size: 0.95rem;
+      /* was 0.8 */
+    }
+  }
+
+  /* --- Large Screens (≥1024px) --- */
+  @media (min-width: 1024px) {
+    h1 {
+      font-size: 5.8rem;
+      /* was 2.2 */
+    }
+
+    h2 {
+      font-size: 5.2rem;
+      /* was 1.8 */
+    }
+
+    h3 {
+      font-size: 3.8rem;
+      /* was 1.6 */
+    }
+
+    p span {
+      font-size: 3.2rem;
+      /* was 1.0 */
+    }
+
+    small {
+      font-size: 1.6rem;
+      /* was 0.9 */
+    }
+  }
+}
