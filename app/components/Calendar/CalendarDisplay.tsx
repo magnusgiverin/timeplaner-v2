@@ -72,28 +72,26 @@ export async function handleExport({
   }
 
   if (mode === "google") {
-    // Flatten aliases into CODE:ALIAS, separated by comma
-    const aliasParam = Object.entries(alias)
-      .map(([k, v]) => `${k}:${v}`)
-      .join(",");
-
-    const params = new URLSearchParams({
-      courses: courses.join(","), // simple comma-separated list
-      semester,
-      state: encodeURIComponent(JSON.stringify(state)), // optional, only if needed server-side
-      alias: aliasParam, // flattened
-    });
-
-    // Publicly reachable GET endpoint
-    const icsUrl = `${window.location.origin}/api/calendar?${params.toString()}`;
-
-    const googleUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(
-      icsUrl
-    )}`;
-
-    window.open(googleUrl, "_blank");
+    await addToGoogleCalendar(courses, semester, state, alias);
     return;
   }
+}
+
+async function addToGoogleCalendar(courses: string[], semester: string, state: Record<string, Record<string, boolean>>, alias: Record<string, string>) {
+  // 1. Save state server-side
+  const res = await fetch("/api/save-state", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ courses, semester, state, alias }),
+  });
+  const { key } = await res.json();
+  if (!key) return alert("Failed to generate calendar");
+
+  // 2. Open Google Calendar with short URL
+  const icsUrl = `${window.location.origin}/api/calendar?key=${key}`;
+  const googleUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(icsUrl)}`;
+
+  window.open(googleUrl, "_blank");
 }
 
 function stringToPastelColor(

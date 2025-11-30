@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { SemesterPlan } from "@/app/types/SemesterPlan";
 import { createEvents } from "ics";
 import { parseISO } from "date-fns";
+import { stateStore } from "./save-state/route";
 
 interface EventState {
   [courseId: string]: Record<string, boolean>;
@@ -118,51 +119,21 @@ export async function POST(req: NextRequest) {
   }
 }
 
+
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
+    const key = url.searchParams.get("key");
+    if (!key) return new NextResponse("Missing key", { status: 400 });
 
-    const coursesRaw = url.searchParams.get("courses") || "";
-    const semester = url.searchParams.get("semester") || "";
-    const stateRaw = url.searchParams.get("state") || "";
-    const aliasRaw = url.searchParams.get("alias") || "";
+    const data = stateStore.get(key);
+    if (!data) return new NextResponse("Invalid or expired key", { status: 404 });
 
-    if (!coursesRaw || !semester) {
-      return new NextResponse("Missing courses or semester", {
-        status: 400,
-        headers: { "Content-Type": "text/plain" },
-      });
-    }
+    const { courses, semester, state, alias } = data;
 
-    // courses="AAR4360,AAR4235"
-    const courses = coursesRaw.split(",").map((c) => c.trim());
-
-    // state is optional, decode if present
-    let state: EventState = {};
-    try {
-      if (stateRaw) {
-        state = JSON.parse(decodeURIComponent(stateRaw));
-      }
-    } catch (err) {
-      console.error("Failed to parse state:", err);
-    }
-
-    // alias="AAR1025:Math,AAR4208:Physics"
-    const alias: { [courseId: string]: string } = {};
-    if (aliasRaw) {
-      aliasRaw.split(",").forEach((pair) => {
-        const [key, value] = pair.split(":");
-        if (key && value) alias[key] = value;
-      });
-    }
-
-    // Generate ICS and return
     return await handleRequest(courses, semester, state, alias);
   } catch (err) {
     console.error(err);
-    return new NextResponse("Server error", {
-      status: 500,
-      headers: { "Content-Type": "text/plain" },
-    });
+    return new NextResponse("Server error", { status: 500 });
   }
 }
