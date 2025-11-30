@@ -72,18 +72,18 @@ export async function handleExport({
   }
 
   if (mode === "google") {
-   const params = new URLSearchParams({
-  courses: JSON.stringify(courses),
-  semester,
-  state: encodeURIComponent(JSON.stringify(state)),
-  alias: JSON.stringify(alias),
-});
+    const params = new URLSearchParams({
+      courses: JSON.stringify(courses),
+      semester,
+      state: encodeURIComponent(JSON.stringify(state)),
+      alias: JSON.stringify(alias),
+    });
 
-const icsUrl = `${window.location.origin}/api/calendar?${params.toString()}`;
+    const icsUrl = `${window.location.origin}/api/calendar?${params.toString()}`;
 
-const googleUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(icsUrl)}`;
+    const googleUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(icsUrl)}`;
 
-window.open(googleUrl, "_blank");
+    window.open(googleUrl, "_blank");
 
     return;
   }
@@ -299,14 +299,14 @@ const CalendarDisplay = ({ semesterPlans }: CalendarDisplayProps) => {
               ? `Week ${weekNumber}`
               : view === "day"
                 ? selectedDate.toLocaleDateString("en-US", {
-                  weekday: "long",
-                  month: "long",
-                  day: "numeric",
-                })
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                  })
                 : selectedDate.toLocaleDateString("en-US", {
-                  month: "long",
-                  year: "numeric",
-                })}
+                    month: "long",
+                    year: "numeric",
+                  })}
           </h3>
         </span>
         <span className="flex flex-row gap-2">
