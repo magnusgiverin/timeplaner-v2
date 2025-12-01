@@ -3,6 +3,7 @@ import HourLines from "./HourLines";
 import { EventOnCalendar } from "./EventOnCalendar";
 import { Event } from "@/app/types/SemesterPlan";
 import { parseISO, isSameDay } from "date-fns";
+import { parseEventHour } from "./CalendarDisplay";
 
 const weekdays = ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag"];
 
@@ -31,52 +32,53 @@ const DaysColumn = ({
     return eventItems.filter((ev) => isSameDay(parseISO(ev.dtstart), day));
   }
 
-  // Assign overlapping events to columns
-  function positionEvents(events: Event[]): PositionedEvent[] {
-    if (!events.length) return [];
+function positionEvents(events: Event[]): PositionedEvent[] {
+  if (!events.length) return [];
 
-    // Sort events by start time
-    const sorted = [...events].sort(
-      (a, b) => new Date(a.dtstart).getTime() - new Date(b.dtstart).getTime(),
+  // Sort by start hour
+  const sorted = [...events].sort(
+    (a, b) => parseEventHour(a.dtstart) - parseEventHour(b.dtstart)
+  );
+
+  const positioned: PositionedEvent[] = [];
+
+  type Column = { event: Event; colIndex: number };
+  let activeColumns: Column[] = [];
+
+  sorted.forEach((ev) => {
+    const evStart = parseEventHour(ev.dtstart);
+
+    // Keep only columns that haven't ended yet
+    activeColumns = activeColumns.filter(
+      (c) => parseEventHour(c.event.dtend) > evStart
     );
 
-    const positioned: PositionedEvent[] = [];
+    // Find first free column index
+    let colIndex = 0;
+    const usedIndices = activeColumns.map((c) => c.colIndex);
+    while (usedIndices.includes(colIndex)) colIndex++;
 
-    type Column = { event: Event; colIndex: number };
-    let activeColumns: Column[] = [];
+    activeColumns.push({ event: ev, colIndex });
 
-    sorted.forEach((ev) => {
-      const evStart = new Date(ev.dtstart).getTime();
+    const totalColumns = activeColumns.length;
+    const width = totalColumns === 1 ? 100 : 100 / totalColumns;
 
-      activeColumns = activeColumns.filter(
-        (c) => new Date(c.event.dtend).getTime() > evStart,
-      );
-
-      let colIndex = 0;
-      const usedIndices = activeColumns.map((c) => c.colIndex);
-      while (usedIndices.includes(colIndex)) colIndex++;
-
-      activeColumns.push({ event: ev, colIndex });
-
-      const totalColumns = activeColumns.length;
-      const width = totalColumns === 1 ? 100 : 100 / totalColumns;
-
-      positioned.push({
-        event: ev,
-        width,
-        left: width * colIndex,
-      });
+    positioned.push({
+      event: ev,
+      width,
+      left: width * colIndex,
     });
+  });
 
-    return positioned;
-  }
+  return positioned;
+}
 
   return (
     <span className="flex w-full flex-row">
       {weekDates.map((day, idx) => {
         const dayEvents = eventsForDay(day);
         const positionedEvents = positionEvents(dayEvents);
-
+        
         return (
           <div
             key={idx}

@@ -115,7 +115,7 @@ const CourseSetupClientPage = () => {
           description="Søk etter og velg fag du ønsker å inkludere i kalenderen din. Du kan også skrive inn kommaseparerte fagkoder."
         />
         {/* Search */}
-        <div className="w-full max-w-4xl flex flex-row gap-2 h-12">
+        <div className="w-full max-w-4xl flex flex-col md:flex-row gap-2 h-12 mb-8">
           <input
             type="text"
             placeholder="Søk etter fag eller skriv kommaseparerte fagkoder..."
@@ -126,14 +126,14 @@ const CourseSetupClientPage = () => {
                 processCommaSeparatedCodes();
               }
             }}
-            className="highlight-border-burnt-peach p-4 border-b-2 border-terracotta-clay w-2/3 focus:outline-none"
+            className="highlight-border-burnt-peach py-4 border-b-2 border-terracotta-clay w-full md:w-2/3 focus:outline-none"
           />
-
+        <span className="flex flex-row gap-2 w-full md:w-1/3">
           {/* Season selector */}
           <select
             value={season}
             onChange={(e) => setSeason(e.target.value)}
-            className="h-12 w-1/6 border-b-2 border-terracotta-clay focus:outline-none"
+            className="h-12 w-1/2 border-b-2 border-terracotta-clay focus:outline-none"
           >
             <option value="h">Høst</option>
             <option value="v">Vår</option>
@@ -144,12 +144,12 @@ const CourseSetupClientPage = () => {
             type="number"
             value={year}
             onChange={(e) => setYear(e.target.value)}
-            className="h-12 w-1/6 border-b-2 border-terracotta-clay focus:outline-none"
+            className="h-12 w-1/2 border-b-2 border-terracotta-clay focus:outline-none"
             placeholder="År (2024)"
             min="2000"
             max="2100"
           />
-
+</span>
           {selectedCourses.length > 0 && (
             <button
               onClick={handleNavigateToCalendar}

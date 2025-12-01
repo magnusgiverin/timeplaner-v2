@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getColorForEvent } from "./CalendarDisplay";
+import { getColorForEvent, parseEventHour } from "./CalendarDisplay";
 import { Event } from "@/app/types/SemesterPlan";
 import EventModal from "./EventModal";
 import { useSearchParams } from "next/navigation";
@@ -13,13 +13,6 @@ type EventOnCalendarProps = {
 };
 
 const HOUR_HEIGHT = 32;
-
-function parseEventHour(dt: string) {
-  // dt = "2025-08-18T08:00:00+02"
-  const [datePart, timePart] = dt.split("T");
-  const [hoursStr, minutesStr] = timePart.split(":");
-  return parseInt(hoursStr, 10) + parseInt(minutesStr, 10) / 60;
-}
 
 export const EventOnCalendar = ({ eventData }: EventOnCalendarProps) => {
   const [modalOpen, setModalOpen] = useState(false);

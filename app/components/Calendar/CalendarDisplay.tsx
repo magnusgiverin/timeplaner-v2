@@ -91,6 +91,13 @@ export async function handleExport({
   }
 }
 
+export function parseEventHour(dt: string) {
+  // dt = "2025-08-18T08:00:00+02"
+  const [datePart, timePart] = dt.split("T");
+  const [hoursStr, minutesStr] = timePart.split(":");
+  return parseInt(hoursStr, 10) + parseInt(minutesStr, 10) / 60;
+}
+
 function stringToPastelColor(
   str: string,
   lightness = 85,
