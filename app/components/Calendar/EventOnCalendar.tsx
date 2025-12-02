@@ -12,7 +12,7 @@ type EventOnCalendarProps = {
   };
 };
 
-const HOUR_HEIGHT = 32;
+const HOUR_HEIGHT = 48;
 
 export const EventOnCalendar = ({ eventData }: EventOnCalendarProps) => {
   const [modalOpen, setModalOpen] = useState(false);

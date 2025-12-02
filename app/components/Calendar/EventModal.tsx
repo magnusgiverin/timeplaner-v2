@@ -1,4 +1,5 @@
 import { Event } from "@/app/types/SemesterPlan";
+import { parseEventHour } from "./CalendarDisplay";
 
 interface EventModalProps {
   event: Event;
@@ -10,7 +11,7 @@ const EventModal = ({ event, setModalOpen }: EventModalProps) => {
     <div className="fixed inset-0 bg-black/20 bg-opacity-50 flex items-center justify-center z-50">
       <div className="p-4 rounded-xl bg-powder-petal min-w-[300px] md:min-w-[400px] max-w-xl flex flex-col gap-2">
         {/* Header: course + close button */}
-        <div className="flex justify-between items-center mb-2">
+        <div className="flex justify-between items-top mb-2 ">
           <h3 className="font-semibold">{event.courseid}</h3>
           <button
             className="cursor-pointer bg-burnt-peach rounded-full flex items-center justify-center p-2 w-12 h-12 transition hover:bg-terracotta-clay"
@@ -20,12 +21,12 @@ const EventModal = ({ event, setModalOpen }: EventModalProps) => {
             <span className="material-icons">close</span>
           </button>
         </div>
-
+      <span className="flex flex-col gap-2 p-2">
         {/* Basic timing */}
         <div className="flex items-center gap-2">
           <span className="material-icons text-burnt-peach">schedule</span>
           <p>
-            {event.dtstart} – {event.dtend}
+            {String(parseEventHour(event.dtstart)).replace(".", ":")} – {String(parseEventHour(event.dtend)).replace(".", ":")}
           </p>
         </div>
 
@@ -72,17 +73,6 @@ const EventModal = ({ event, setModalOpen }: EventModalProps) => {
           </p>
         </div>
 
-        {/* Plenary / active */}
-        <div className="flex items-center gap-2">
-          <span className="material-icons text-burnt-peach">flag</span>
-          <p>
-            {event.status_plenary
-              ? "Plenumsundervisning"
-              : "Ikke plenumsundervisning"}{" "}
-            • {event.active ? "Aktiv" : "Inaktiv"}
-          </p>
-        </div>
-
         {/* Student groups */}
         {event.studentgroups?.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
@@ -104,23 +94,7 @@ const EventModal = ({ event, setModalOpen }: EventModalProps) => {
             ))}
           </div>
         )}
-
-        {/* Extra metadata */}
-        <div className="flex items-center gap-2">
-          <span className="material-icons text-burnt-peach">info</span>
-          <p>
-            Status: {event.status} • Term: {event.terminnr} • LopeNr:{" "}
-            {event.lopenr}
-          </p>
-        </div>
-
-        {/* Multiday */}
-        {event.multiday && (
-          <div className="flex items-center gap-2">
-            <span className="material-icons text-burnt-peach">date_range</span>
-            <p>Multiday Event</p>
-          </div>
-        )}
+      </span>
       </div>
     </div>
   );
