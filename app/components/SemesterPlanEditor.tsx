@@ -196,11 +196,11 @@ export default function SemesterPlanEditor({
                     }`}
                     onClick={() => toggleAid(courseid, key)}
                   >
-                    {!activeAids[courseid]?.[key] && (
-                      <div className="absolute top-2 right-2 material-icons px-2 py-1 rounded-full text-xs font-semibold z-10">
-                        visibility_off
+                  
+                      <div className="absolute top-2 right-2 material-icons px-2 py-1 text-xs font-semibold z-10">
+                        {!activeAids[courseid]?.[key] ? "visibility_off" : "visibility"}
                       </div>
-                    )}
+                  
                     <div className="text-sm p-4">
                       <p className="font-semibold flex items-center gap-2 mb-2">
                         <span className="material-icons text-burnt-peach">
